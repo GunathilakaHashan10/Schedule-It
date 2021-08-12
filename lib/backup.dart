@@ -1,347 +1,194 @@
 // import 'package:flutter/cupertino.dart';
 // import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
+// import 'package:provider/provider.dart';
 // import 'package:intl/intl.dart';
-// import 'package:schedule_app/models/http_exception.dart';
-// import 'dart:convert';
 //
-// import '../helpers/secrets.dart';
 // import '../helpers/helper.dart';
-// import 'task.dart';
+// import '../providers/connectivity_provider.dart';
+// import '../widgets/app_drawer.dart';
+// import 'schedule_screen.dart';
+// import 'no_connection_screen.dart';
 //
-// class ScheduleProvider with ChangeNotifier {
-//   List<Task> _taskList = [];
-//   String? _scheduleId = '';
-//   final String? _authToken;
-//   final String? _userId;
+// class HomeScreen extends StatefulWidget {
+//   const HomeScreen({Key? key}) : super(key: key);
 //
-//   ScheduleProvider(this._authToken, this._userId, this._scheduleId, this._taskList);
+//   @override
+//   _HomeScreenState createState() => _HomeScreenState();
+// }
 //
-//   List<Task> get taskList {
-//     _taskList.sort((taskA, taskB) =>
-//         taskA.startTimeInDouble!.compareTo(taskB.startTimeInDouble!));
-//     return [..._taskList];
-//   }
+// class _HomeScreenState extends State<HomeScreen>  {
+//   DateTime _dateTime = DateTime.now();
+//   List<DateTime> _dateTimes = [];
+//   int _pageIndex = 0;
 //
-//   String get scheduleId {
-//     return _scheduleId!;
-//   }
 //
-//   void setScheduleId(String id) {
-//     _scheduleId = id;
-//   }
-//
-//   Future<void> fetchAndSetTasksForADay(DateTime dateTime) async {
-//     String day = DateFormat('yyyy-MM-dd').format(dateTime);
-//     try {
-//       final scheduleData = await _fetchSchedule(day);
-//       if (scheduleData!.isEmpty) {
-//         return;
-//       }
-//
-//       // print('fetchAndSetTasks() called................');
-//       final List<Task> loadedTaskList = [];
-//       scheduleData.forEach((scheduleId, value) {
-//         _scheduleId = scheduleId;
-//         if (value['tasks'] != null) {
-//           value['tasks'].forEach((task) {
-//             loadedTaskList.add(
-//               Task(
-//                 id: task['id'],
-//                 text: task['text'],
-//                 startTime: task['startTime'],
-//                 endTime: task['endTime'],
-//                 duration: task['duration'],
-//                 isCompleted: task['isCompleted'],
-//                 date: DateTime.now(),
-//                 startTimeInDouble: task['startTimeInDouble'],
-//                 endTimeInDouble: task['endTimeInDouble'],
-//                 effortRating: task['effortRating'],
-//               ),
-//             );
-//           });
-//         }
-//       });
-//       _taskList = loadedTaskList;
-//       notifyListeners();
-//     } catch (error) {
-//       throw error;
+//   @override
+//   void initState() {
+//     super.initState();
+//     for (var i = 0; i < 14; i++) {
+//       _dateTimes.add(DateTime.now().subtract(Duration(days: 0 - i)));
 //     }
+//     Provider.of<ConnectivityProvider>(context, listen: false).startMonitoring();
 //   }
 //
-//   Future<void> fetchAndSetTasks() async {
-//     String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-//     try {
-//       final scheduleData = await _fetchSchedule(today);
-//       if (scheduleData!.isEmpty) {
-//         return;
-//       }
 //
-//       // print('fetchAndSetTasks() called................');
-//       final List<Task> loadedTaskList = [];
-//       scheduleData.forEach((scheduleId, value) {
-//         _scheduleId = scheduleId;
-//         if (value['tasks'] != null) {
-//           value['tasks'].forEach((task) {
-//             loadedTaskList.add(
-//               Task(
-//                 id: task['id'],
-//                 text: task['text'],
-//                 startTime: task['startTime'],
-//                 endTime: task['endTime'],
-//                 duration: task['duration'],
-//                 isCompleted: task['isCompleted'],
-//                 date: DateTime.now(),
-//                 startTimeInDouble: task['startTimeInDouble'],
-//                 endTimeInDouble: task['endTimeInDouble'],
-//                 effortRating: task['effortRating'],
-//               ),
-//             );
-//           });
-//         }
-//       });
-//       _taskList = loadedTaskList;
-//       notifyListeners();
-//     } catch (error) {
-//       throw error;
+//   void _setDateTime(int index) {
+//     setState(() {
+//       _dateTime = _dateTimes[index];
+//     });
+//   }
+//
+//   List<Widget> _getScheduleScreenWidgets(double appBarHeight) {
+//     List<ScheduleScreen> scheduleScreenList = [];
+//     _dateTimes.forEach((dateTime) {
+//       scheduleScreenList
+//           .add(ScheduleScreen(dateTime: dateTime, appBarHeight: appBarHeight));
+//     });
+//     return scheduleScreenList.toList();
+//   }
+//
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final PageController pageController = PageController(initialPage: 0);
+//     final PreferredSizeWidget appBar = AppBar(
+//       title: Text(DateFormat.yMMMMEEEEd().format(_dateTime),
+//           style: TextStyle(
+//               fontWeight: FontWeight.w600, color: Colors.black, fontSize: 19)),
+//       backgroundColor: Colors.white,
+//       elevation: 0,
+//       iconTheme: IconThemeData(color: Colors.black87),
+//
+//     );
+//
+//     void nextPage() {
+//       pageController.animateToPage(pageController.page!.toInt() + 1,
+//           duration: Duration(milliseconds: 50), curve: Curves.easeIn);
 //     }
-//   }
 //
-//   Future<Map<String, dynamic>?> _fetchSchedule(String date) async {
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId.json?auth=$_authToken&orderBy="date"&equalTo="$date"';
-//     try {
-//       final response = await http.get(Uri.parse(url));
-//       final scheduleData = json.decode(response.body) as Map<String, dynamic>;
-//       return scheduleData;
-//     } catch (error) {
-//       throw error;
+//     void previousPage() {
+//       pageController.animateToPage(pageController.page!.toInt() - 1,
+//           duration: Duration(milliseconds: 50), curve: Curves.easeIn);
 //     }
-//   }
 //
-//   Future<void> addTask(Task newTask) async {
-//     try {
-//       if (Helper.isToday(newTask.date)) {
-//         if (_taskList.isEmpty && _scheduleId == '') {
-//           _taskList.add(newTask);
-//           notifyListeners();
-//           final response =
-//           await _createNewScheduleAndAddTask(newTask, _taskList);
-//           setScheduleId(json.decode(response.body)['name']);
-//         } else {
-//           _taskList.add(newTask);
-//           notifyListeners();
-//           final response =
-//           await _addTaskToExistingSchedule(newTask, _taskList, _scheduleId);
-//         }
-//       } else {
-//         String date = DateFormat('yyyy-MM-dd').format(newTask.date);
-//         final existingSchedule = await _fetchSchedule(date);
-//         List<Task> _futureTaskList = [];
-//         if (existingSchedule!.isEmpty) {
-//           _futureTaskList.add(newTask);
-//           final response =
-//           await _createNewScheduleAndAddTask(newTask, _futureTaskList);
-//         } else {
-//           String _existingScheduleId = '';
-//           List<Task> _existingScheduleTaskList = [];
-//           existingSchedule.forEach((schId, value) {
-//             _existingScheduleId = schId;
-//             value['tasks'].forEach((task) {
-//               _existingScheduleTaskList.add(
-//                 Task(
-//                   id: task['id'],
-//                   text: task['text'],
-//                   startTime: task['startTime'],
-//                   endTime: task['endTime'],
-//                   duration: task['duration'],
-//                   isCompleted: task['isCompleted'],
-//                   date: newTask.date,
-//                   startTimeInDouble: task['startTimeInDouble'],
-//                   endTimeInDouble: task['endTimeInDouble'],
-//                   effortRating: task['effortRating'],
+//     void homePage() {
+//       pageController.animateToPage(0,
+//           duration: Duration(milliseconds: 50), curve: Curves.easeIn);
+//     }
+//
+//     return Consumer<ConnectivityProvider>(builder: (context, connectivity, _) {
+//       if (connectivity.isOnline != null) {
+//         return connectivity.isOnline!
+//             ? Scaffold(
+//           appBar: appBar,
+//           body: PageView(
+//             scrollDirection: Axis.horizontal,
+//             controller: pageController,
+//             onPageChanged: (value) {
+//               print(value);
+//               // setState(() {
+//               //   _pageIndex = value;
+//               // });
+//               _setDateTime(value);
+//             },
+//             physics: NeverScrollableScrollPhysics(),
+//             children: [
+//               ..._getScheduleScreenWidgets(appBar.preferredSize.height)
+//             ],
+//           ),
+//           floatingActionButton: SafeArea(
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Flexible(
+//                   flex: 1,
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.end,
+//                     children: [
+//                       _pageIndex != 0
+//                           ? MaterialButton(
+//                         clipBehavior: Clip.antiAlias,
+//                         elevation: 2.0,
+//                         color: Colors.white,
+//                         padding: EdgeInsets.all(10.0),
+//                         shape: CircleBorder(),
+//                         child: Icon(Icons.home_outlined,
+//                             color: Colors.black87),
+//                         onPressed: homePage,
+//                       )
+//                           : const SizedBox(),
+//                       MaterialButton(
+//                         clipBehavior: Clip.antiAlias,
+//                         elevation: 2.0,
+//                         color: Colors.white,
+//                         padding: EdgeInsets.symmetric(horizontal: 20.0),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.only(
+//                               topLeft: Radius.circular(30.0),
+//                               bottomLeft: Radius.circular(30.0)),
+//                         ),
+//                         child: Icon(Icons.navigate_before,
+//                             color: Colors.black87),
+//                         onPressed: previousPage,
+//                       ),
+//                     ],
+//                   ),
 //                 ),
-//               );
-//             });
-//           });
-//           _futureTaskList = _existingScheduleTaskList;
-//           _futureTaskList.add(newTask);
-//           final response = await _addTaskToExistingSchedule(
-//               newTask, _futureTaskList, _existingScheduleId);
-//         }
+//                 Flexible(
+//                   flex: 1,
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                     children: [
+//                       MaterialButton(
+//                         clipBehavior: Clip.antiAlias,
+//                         elevation: 2.0,
+//                         color: Colors.white,
+//                         padding: EdgeInsets.symmetric(horizontal: 20.0),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.only(
+//                               topRight: Radius.circular(30.0),
+//                               bottomRight: Radius.circular(30.0)),
+//                         ),
+//                         child: Icon(Icons.navigate_next,
+//                             color: Colors.black87),
+//                         onPressed: nextPage,
+//                       ),
+//                       Container(
+//                         width: 50.0,
+//                         height: 50.0,
+//                         child: FloatingActionButton(
+//                           elevation: 2.0,
+//                           child: Icon(
+//                             Icons.add,
+//                             color: Colors.black87,
+//                           ),
+//                           onPressed: () => Helper.showAddNewTask(
+//                               context: context, isEditing: false, date: _dateTime),
+//                           backgroundColor: Colors.white,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//                 const SizedBox(
+//                   width: 10.0,
+//                 )
+//               ],
+//             ),
+//           ),
+//           floatingActionButtonLocation:
+//           FloatingActionButtonLocation.centerFloat,
+//           drawer: AppDrawer(),
+//         )
+//             : NoConnectionScreen();
 //       }
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-//
-//   Future<dynamic> _createNewScheduleAndAddTask(
-//       Task newTask, List<Task> taskList) async {
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId.json?auth=$_authToken';
-//     try {
-//       final response = await http.post(
-//         Uri.parse(url),
-//         body: json.encode({
-//           'day': DateFormat('EEE').format(newTask.date),
-//           'date': DateFormat('yyyy-MM-dd').format(newTask.date),
-//           'tasks': taskList
-//               .map((task) => {
-//             'id': task.id,
-//             'text': task.text,
-//             'startTime': task.startTime,
-//             'endTime': task.endTime,
-//             'duration': task.duration,
-//             'effortRating': task.effortRating,
-//             'isCompleted': task.isCompleted,
-//             'startTimeInDouble': task.startTimeInDouble,
-//             'endTimeInDouble': task.endTimeInDouble,
-//           })
-//               .toList(),
-//         }),
+//       return Scaffold(
+//         appBar: appBar,
+//         body: Center(
+//           child: Helper.loadingIndicator(context),
+//         ),
+//         drawer: AppDrawer(),
 //       );
-//       return response;
-//     } catch (error) {
-//       throw error;
-//     }
+//     });
 //   }
-//
-//   Future<dynamic> _addTaskToExistingSchedule(
-//       Task newTask, List<Task> taskList, String? scheduleId) async {
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId/$scheduleId.json?auth=$_authToken';
-//     try {
-//       final response = await http.patch(
-//         Uri.parse(url),
-//         body: json.encode({
-//           'day': DateFormat('EEE').format(newTask.date),
-//           'date': DateFormat('yyyy-MM-dd').format(newTask.date),
-//           'tasks': taskList
-//               .map((task) => {
-//             'id': task.id,
-//             'text': task.text,
-//             'startTime': task.startTime,
-//             'endTime': task.endTime,
-//             'duration': task.duration,
-//             'effortRating': task.effortRating,
-//             'isCompleted': task.isCompleted,
-//             'startTimeInDouble': task.startTimeInDouble,
-//             'endTimeInDouble': task.endTimeInDouble,
-//           })
-//               .toList(),
-//         }),
-//       );
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-//
-//   Future<void> setIsCompletedAndEffortRating(
-//       String taskId, bool isCompleted, double effortRating) async {
-//     int taskIndex = _taskList.indexWhere((task) => task.id == taskId);
-//     Task task = _taskList[taskIndex];
-//     bool previousIsCompleted = task.isCompleted;
-//     task.setIsCompletedAndEffortRating(isCompleted, effortRating);
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId/$_scheduleId/tasks/$taskIndex.json?auth=$_authToken';
-//
-//     try {
-//       final response = await http.patch(
-//         Uri.parse(url),
-//         body: json.encode({
-//           'id': task.id,
-//           'text': task.text,
-//           'startTime': task.startTime,
-//           'endTime': task.endTime,
-//           'duration': task.duration,
-//           'effortRating': effortRating,
-//           'isCompleted': isCompleted,
-//           'startTimeInDouble': task.startTimeInDouble,
-//           'endTimeInDouble': task.endTimeInDouble,
-//         }),
-//       );
-//       if (response.statusCode >= 400) {
-//         task.setIsCompletedAndEffortRating(previousIsCompleted, 1.0);
-//         throw HttpException('Something went wrong, please try again shortly.');
-//       }
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-//
-//   Future<void> editTask(Task editedTask) async {
-//     int taskIndex = _taskList.indexWhere((task) => task.id == editedTask.id);
-//     Task originalTask = _taskList[taskIndex];
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId/$_scheduleId/tasks/$taskIndex.json?auth=$_authToken';
-//     try {
-//       _taskList[taskIndex] = editedTask;
-//       notifyListeners();
-//       final response = await http.patch(
-//         Uri.parse(url),
-//         body: json.encode({
-//           'id': editedTask.id,
-//           'text': editedTask.text,
-//           'startTime': editedTask.startTime,
-//           'endTime': editedTask.endTime,
-//           'duration': editedTask.duration,
-//           'effortRating': editedTask.effortRating,
-//           'isCompleted': editedTask.isCompleted,
-//           'startTimeInDouble': editedTask.startTimeInDouble,
-//           'endTimeInDouble': editedTask.endTimeInDouble,
-//         }),
-//       );
-//       if (response.statusCode >= 400) {
-//         _taskList[taskIndex] = originalTask;
-//         notifyListeners();
-//         throw HttpException('Something went wrong, fallback changes..');
-//       }
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-//
-//   Future<void> deleteTask(String taskId) async {
-//     int taskIndex = _taskList.indexWhere((task) => task.id == taskId);
-//
-//     Task? backupTask = _taskList[taskIndex];
-//     _taskList.removeAt(taskIndex);
-//     notifyListeners();
-//     final url =
-//         '${Secrets.FIREBASE_URL}/schedules/$_userId/$_scheduleId.json?auth=$_authToken';
-//     try {
-//       final response = await http.patch(Uri.parse(url),
-//           body: json.encode({
-//             'day': DateFormat('EEE').format(backupTask.date),
-//             'date': DateFormat('yyyy-MM-dd').format(backupTask.date),
-//             'tasks': taskList
-//                 .map((task) => {
-//               'id': task.id,
-//               'text': task.text,
-//               'startTime': task.startTime,
-//               'endTime': task.endTime,
-//               'duration': task.duration,
-//               'effortRating': task.effortRating,
-//               'isCompleted': task.isCompleted,
-//               'startTimeInDouble': task.startTimeInDouble,
-//               'endTimeInDouble': task.endTimeInDouble,
-//             })
-//                 .toList(),
-//           }));
-//       if (response.statusCode >= 400) {
-//         _taskList.add(backupTask);
-//         notifyListeners();
-//         throw HttpException('Something went wrong, fallback changes..');
-//       }
-//       backupTask = null;
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-//
-//   void clearData() {
-//     _taskList.clear();
-//     _scheduleId = '';
-//   }
-//
 // }

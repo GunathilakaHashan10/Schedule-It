@@ -99,8 +99,10 @@ class _AddNewTaskState extends State<AddNewTask> {
           duration: Helper.calculateDurationInSeconds(_startTime!, _endTime!),
           startTimeInDouble: Helper.convertTimeToDouble(_startTime!),
           endTimeInDouble: Helper.convertTimeToDouble(_endTime!),
+          effortRating: widget.task!.effortRating,
           createdAt: widget.task!.createdAt,
           editedAt: DateTime.now().toIso8601String(),
+          completedAt: widget.task!.completedAt,
         );
         await Provider.of<ScheduleProvider>(context, listen: false)
             .editTask(editedTask);

@@ -25,26 +25,22 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: [
           AppBar(
-            title: Text('Hi! Start Your Journey',
+            title: Text('Hi!, ${Provider.of<AuthProvider>(context, listen: false).userEmail!.split('@')[0]}',
+                maxLines: 2,
+                softWrap: true,
+                // overflow: TextOverflow.ellipsis,
                 style: _openSansTextStyle(20, FontWeight.w500, Colors.white)),
             automaticallyImplyLeading: false,
             backgroundColor: Theme.of(context).primaryColor,
           ),
           Divider(),
           ListTile(
-            leading: Icon(Icons.today, color: Colors.black54),
-            title: Text('Home', style: _openSansTextStyle(16, FontWeight.w400, Colors.black)),
-            onTap: () {
-              Navigator.of(context).pushReplacementNamed('/');
-            },
-          ),
-          Divider(),
-          ListTile(
             leading: Icon(CupertinoIcons.square_favorites, color: Colors.black54),
             title: Text('Past schedules', style: _openSansTextStyle(16, FontWeight.w400, Colors.black)),
             onTap: () {
+              Navigator.of(context).pop();
               Navigator.of(context)
-                  .pushReplacementNamed(PastSchedulesScreen.routeName);
+                  .pushNamed(PastSchedulesScreen.routeName);
             },
           ),
           Divider(),

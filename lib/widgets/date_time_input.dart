@@ -53,8 +53,7 @@ class _DateTimeInputState extends State<DateTimeInput> {
   @override
   void didChangeDependencies() {
     if(_isInit) {
-      if (Helper.isDateTimeEqual(DateTime.now(), _selfDate!) &&
-          !widget.isEditing) {
+      if (!widget.isEditing) {
         final scheduleData =
             Provider.of<ScheduleProvider>(context, listen: false).taskList;
         if (scheduleData.isNotEmpty) {
@@ -163,24 +162,22 @@ class _DateTimeInputState extends State<DateTimeInput> {
       return;
     }
 
-    if (Helper.isDateTimeEqual(DateTime.now(), _selfDate!)) {
-      if (!_isSelectedTimeValid(_selfStartTime!)) {
-        setState(() {
-          _error = true;
-          _errorMessage = 'Invalid start time.';
-          _errorType = TimeType.StartTime;
-        });
-        return;
-      }
+    if (!_isSelectedTimeValid(_selfStartTime!)) {
+      setState(() {
+        _error = true;
+        _errorMessage = 'You have a another task in this time.';
+        _errorType = TimeType.StartTime;
+      });
+      return;
+    }
 
-      if (!_isSelectedTimeValid(_selfEndTime!)) {
-        setState(() {
-          _error = true;
-          _errorMessage = 'Invalid end time.';
-          _errorType = TimeType.EndTime;
-        });
-        return;
-      }
+    if (!_isSelectedTimeValid(_selfEndTime!)) {
+      setState(() {
+        _error = true;
+        _errorMessage = 'You have a another task in this time.';
+        _errorType = TimeType.EndTime;
+      });
+      return;
     }
 
     if (Helper.convertTimeToDouble(_selfStartTime!) >= Helper.convertTimeToDouble(_selfEndTime!)) {
@@ -216,7 +213,7 @@ class _DateTimeInputState extends State<DateTimeInput> {
                         ? 'Today'
                         : DateFormat.yMMMd().format(_selfDate!),
                   ),
-                  onPressHandler: widget.isEditing || !Helper.isDateTimeEqual(DateTime.now(), _selfDate!) ? (){} : _selectDate,
+                  onPressHandler: () {},
                   color: Color(0xFFECEFF1),
                 ),
                 InputButton(
@@ -243,13 +240,16 @@ class _DateTimeInputState extends State<DateTimeInput> {
                 ),
 
                 _error!
-                    ? Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Theme.of(context).errorColor, fontSize: 12),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                      )
+                    ? Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Theme.of(context).errorColor, fontSize: 12),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: false,
+                        ),
+                    )
                     : SizedBox(),
               ],
             ),

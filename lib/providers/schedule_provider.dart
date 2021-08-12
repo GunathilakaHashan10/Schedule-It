@@ -18,18 +18,18 @@ class ScheduleProvider with ChangeNotifier {
   ScheduleProvider(
       this._authToken, this._userId, this._scheduleId, this._taskList);
 
-  List<Task> get taskList {
+  void sortTaskList() {
     _taskList.sort((taskA, taskB) =>
         taskA.startTimeInDouble!.compareTo(taskB.startTimeInDouble!));
+  }
+
+  List<Task> get taskList {
+    sortTaskList();
     return [..._taskList];
   }
 
   String get scheduleId {
     return _scheduleId!;
-  }
-
-  void setScheduleId(String id) {
-    _scheduleId = id;
   }
 
   Future<void> fetchAndSetTasksForADay(DateTime dateTime) async {
@@ -56,44 +56,9 @@ class ScheduleProvider with ChangeNotifier {
                 startTimeInDouble: task['startTimeInDouble'],
                 endTimeInDouble: task['endTimeInDouble'],
                 effortRating: task['effortRating'],
-                createdAt: task['createdAt']
-              ),
-            );
-          });
-        }
-      });
-      _taskList = loadedTaskList;
-      notifyListeners();
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  Future<void> fetchAndSetTasks() async {
-    String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    try {
-      final scheduleData = await _fetchSchedule(today);
-      if (scheduleData!.isEmpty) {
-        return;
-      }
-
-      final List<Task> loadedTaskList = [];
-      scheduleData.forEach((scheduleId, value) {
-        _scheduleId = scheduleId;
-        if (value['tasks'] != null) {
-          value['tasks'].forEach((task) {
-            loadedTaskList.add(
-              Task(
-                id: task['id'],
-                text: task['text'],
-                startTime: task['startTime'],
-                endTime: task['endTime'],
-                duration: task['duration'],
-                isCompleted: task['isCompleted'],
-                date: DateTime.now(),
-                startTimeInDouble: task['startTimeInDouble'],
-                endTimeInDouble: task['endTimeInDouble'],
-                effortRating: task['effortRating'],
+                createdAt: task['createdAt'],
+                editedAt: task['editedAt'],
+                completedAt: task['completedAt'],
               ),
             );
           });
@@ -121,19 +86,24 @@ class ScheduleProvider with ChangeNotifier {
   Future<void> addTask(Task newTask) async {
     try {
       if (Helper.isToday(newTask.date) || Helper.isFutureDay(newTask.date)) {
+        print('future....');
         if (_taskList.isEmpty && _scheduleId == '') {
           _taskList.add(newTask);
-          notifyListeners();
+          sortTaskList();
           final response =
               await _createNewScheduleAndAddTask(newTask, _taskList);
           _scheduleId = json.decode(response.body)['name'];
-        } else {
-          _taskList.add(newTask);
           notifyListeners();
+        } else {
+          print('_addTaskToExistingSchedule.....');
+          _taskList.add(newTask);
+          sortTaskList();
           final response =
               await _addTaskToExistingSchedule(newTask, _taskList, _scheduleId);
+          notifyListeners();
         }
       } else {
+        print('past...');
         String date = DateFormat('yyyy-MM-dd').format(newTask.date);
         final existingSchedule = await _fetchSchedule(date);
         List<Task> pastTaskList = [];
@@ -149,18 +119,17 @@ class ScheduleProvider with ChangeNotifier {
             value['tasks'].forEach((task) {
               _existingScheduleTaskList.add(
                 Task(
-                  id: task['id'],
-                  text: task['text'],
-                  startTime: task['startTime'],
-                  endTime: task['endTime'],
-                  duration: task['duration'],
-                  isCompleted: task['isCompleted'],
-                  date: newTask.date,
-                  startTimeInDouble: task['startTimeInDouble'],
-                  endTimeInDouble: task['endTimeInDouble'],
-                  effortRating: task['effortRating'],
-                  createdAt: task['createdAt']
-                ),
+                    id: task['id'],
+                    text: task['text'],
+                    startTime: task['startTime'],
+                    endTime: task['endTime'],
+                    duration: task['duration'],
+                    isCompleted: task['isCompleted'],
+                    date: newTask.date,
+                    startTimeInDouble: task['startTimeInDouble'],
+                    endTimeInDouble: task['endTimeInDouble'],
+                    effortRating: task['effortRating'],
+                    createdAt: task['createdAt']),
               );
             });
           });
@@ -197,7 +166,9 @@ class ScheduleProvider with ChangeNotifier {
                     'isCompleted': task.isCompleted,
                     'startTimeInDouble': task.startTimeInDouble,
                     'endTimeInDouble': task.endTimeInDouble,
-                    'createdAt': task.createdAt
+                    'createdAt': task.createdAt,
+                    'editedAt': task.editedAt,
+                    'completedAt': task.completedAt,
                   })
               .toList(),
         }),
@@ -229,12 +200,15 @@ class ScheduleProvider with ChangeNotifier {
                     'isCompleted': task.isCompleted,
                     'startTimeInDouble': task.startTimeInDouble,
                     'endTimeInDouble': task.endTimeInDouble,
-                    'createdAt': task.createdAt
+                    'createdAt': task.createdAt,
+                    'editedAt': task.editedAt,
+                    'completedAt': task.completedAt,
                   })
               .toList(),
         }),
       );
     } catch (error) {
+      print(error);
       throw error;
     }
   }
@@ -245,6 +219,7 @@ class ScheduleProvider with ChangeNotifier {
     Task task = _taskList[taskIndex];
     bool previousIsCompleted = task.isCompleted;
     task.setIsCompletedAndEffortRating(isCompleted, effortRating);
+    task.completedAt = isCompleted ? DateTime.now().toIso8601String() : null;
     final url =
         '${Secrets.FIREBASE_URL}/schedules/$_userId/$_scheduleId/tasks/$taskIndex.json?auth=$_authToken';
 
@@ -262,8 +237,8 @@ class ScheduleProvider with ChangeNotifier {
           'startTimeInDouble': task.startTimeInDouble,
           'endTimeInDouble': task.endTimeInDouble,
           'createdAt': task.createdAt,
-          'editedAt': task.editedAt != null ? task.editedAt : null,
-          'completedAt': DateTime.now().toIso8601String(),
+          'editedAt': task.editedAt,
+          'completedAt': task.completedAt,
         }),
       );
       if (response.statusCode >= 400) {
@@ -281,6 +256,7 @@ class ScheduleProvider with ChangeNotifier {
     final url =
         '${Secrets.FIREBASE_URL}/schedules/$_userId/$_scheduleId/tasks/$taskIndex.json?auth=$_authToken';
     try {
+      editedTask.isCompleted = originalTask.isCompleted;
       _taskList[taskIndex] = editedTask;
       notifyListeners();
       final response = await http.patch(
@@ -291,12 +267,13 @@ class ScheduleProvider with ChangeNotifier {
           'startTime': editedTask.startTime,
           'endTime': editedTask.endTime,
           'duration': editedTask.duration,
-          'effortRating': editedTask.effortRating,
-          'isCompleted': editedTask.isCompleted,
+          'effortRating': originalTask.effortRating,
+          'isCompleted': originalTask.isCompleted,
           'startTimeInDouble': editedTask.startTimeInDouble,
           'endTimeInDouble': editedTask.endTimeInDouble,
           'createdAt': editedTask.createdAt,
           'editedAt': editedTask.editedAt,
+          'completedAt': originalTask.completedAt,
         }),
       );
       if (response.statusCode >= 400) {
@@ -311,7 +288,6 @@ class ScheduleProvider with ChangeNotifier {
 
   Future<void> deleteTask(String taskId) async {
     int taskIndex = _taskList.indexWhere((task) => task.id == taskId);
-
     Task? backupTask = _taskList[taskIndex];
     _taskList.removeAt(taskIndex);
     notifyListeners();
@@ -333,6 +309,9 @@ class ScheduleProvider with ChangeNotifier {
                       'isCompleted': task.isCompleted,
                       'startTimeInDouble': task.startTimeInDouble,
                       'endTimeInDouble': task.endTimeInDouble,
+                      'createdAt': task.createdAt,
+                      'editedAt': task.editedAt,
+                      'completedAt': task.completedAt,
                     })
                 .toList(),
           }));

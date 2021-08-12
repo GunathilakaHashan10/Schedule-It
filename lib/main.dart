@@ -12,18 +12,16 @@ import './providers/schedule_provider.dart';
 import './providers/auth_provider.dart';
 import './providers/yourSchedule_provider.dart';
 import './providers/connectivity_provider.dart';
+import './providers/appVersion_provider.dart';
 
 import './screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown
-  ]);
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   runApp(ScheduleApp());
 }
-
 
 class ScheduleApp extends StatelessWidget {
   const ScheduleApp({Key? key}) : super(key: key);
@@ -44,26 +42,28 @@ class ScheduleApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProxyProvider<AuthProvider, YourScheduleProvider>(
-          create: (ctx) => YourScheduleProvider('', '', [], [], [], []),
+          create: (ctx) => YourScheduleProvider('', '', [], []),
           update: (ctx, auth, previousSchedule) => YourScheduleProvider(
             auth.token,
             auth.userId,
             previousSchedule == null ? [] : previousSchedule.pastSchedules,
-            previousSchedule == null ? [] : previousSchedule.futureSchedules,
             previousSchedule == null ? [] : previousSchedule.pastTaskList,
-            previousSchedule == null ? [] : previousSchedule.futureTaskList,
           ),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, AppVersionProvider>(
+          create: (ctx) => AppVersionProvider(''),
+          update: (ctx, auth, previousVersion) =>
+              AppVersionProvider(auth.token),
         ),
       ],
       child: Consumer<AuthProvider>(
         builder: (ctx, auth, _) => MaterialApp(
-          title: 'Schedule App',
+          title: 'Schedule It',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            primaryColor: Colors.purple.shade400,
-            accentColor: Colors.cyan.shade900,
-            errorColor: Colors.redAccent
-          ),
+              primaryColor: Colors.purple.shade400,
+              accentColor: Colors.blue.shade900,
+              errorColor: Colors.redAccent),
           home: auth.isAuth
               ? HomeScreen()
               : FutureBuilder(
@@ -76,7 +76,8 @@ class ScheduleApp extends StatelessWidget {
                 ),
           routes: {
             PastSchedulesScreen.routeName: (ctx) => PastSchedulesScreen(),
-            PastSchedulePreviewScreen.routeName: (ctx) => PastSchedulePreviewScreen(),
+            PastSchedulePreviewScreen.routeName: (ctx) =>
+                PastSchedulePreviewScreen(),
             AboutScreen.routeName: (ctx) => AboutScreen(),
           },
         ),

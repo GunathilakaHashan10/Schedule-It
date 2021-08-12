@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../widgets/add_new_task.dart';
 import '../providers/task.dart';
@@ -105,7 +107,7 @@ class Helper {
 
   static bool isToday(DateTime date) {
     var now = DateTime.now();
-    if (now.difference(date).inDays == 0) {
+    if (now.difference(date).inHours == 0) {
       return true;
     }
     return false;
@@ -113,7 +115,7 @@ class Helper {
 
   static bool isFutureDay(DateTime date) {
     var now = DateTime.now();
-    if (now.difference(date).inDays < 0) {
+    if (now.difference(date).inHours < 0) {
       return true;
     }
     return false;
@@ -134,8 +136,9 @@ class Helper {
 
   static Widget loadingIndicator(BuildContext context) {
     return Center(
-      child: CircularProgressIndicator(
+      child: SpinKitCircle(
         color: Theme.of(context).primaryColor,
+        size: 50.0,
       ),
     );
   }
@@ -173,4 +176,21 @@ class Helper {
       ),
     );
   }
+
+  static Widget appUpdateAlertDialog(
+      BuildContext context, String version) {
+    return AlertDialog(
+      title: Text('Outdated App version'),
+      content: Text('Please uninstall this old version and re-install the app version $version.'),
+      actions: [
+        MaterialButton(
+          child: Text('Exit'),
+          onPressed: () {
+            SystemNavigator.pop();
+          },
+        )
+      ],
+    );
+  }
+
 }

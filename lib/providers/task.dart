@@ -14,6 +14,7 @@ class Task with ChangeNotifier {
   double? effortRating;
   String? createdAt;
   String? editedAt;
+  String? completedAt;
 
   Task({
     required this.id,
@@ -28,6 +29,7 @@ class Task with ChangeNotifier {
     this.effortRating = 1.0,
     this.createdAt,
     this.editedAt,
+    this.completedAt,
   });
 
   void setIsCompletedAndEffortRating(bool value, double effortRatingValue) {

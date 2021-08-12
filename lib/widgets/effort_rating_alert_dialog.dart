@@ -80,7 +80,7 @@ class _EffortRatingAlertDialogState extends State<EffortRatingAlertDialog> with 
                   itemPadding: const EdgeInsets.symmetric(horizontal: 3.0),
                   itemBuilder: (context, _) => Icon(
                       Icons.star,
-                      color: Colors.black87,
+                      color: Theme.of(context).primaryColor,
                       size: 1,
                     ),
                   onRatingUpdate: (rating) {

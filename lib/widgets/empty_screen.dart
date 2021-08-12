@@ -6,11 +6,12 @@ class EmptyScreen extends StatelessWidget {
   final double appBarHeight;
   final DateTime date;
 
-  const EmptyScreen({Key? key, required this.appBarHeight, required this.date }) : super(key: key);
+  const EmptyScreen({Key? key, required this.appBarHeight, required this.date})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
+     final mediaQuery = MediaQuery.of(context);
     return Container(
       height: (mediaQuery.size.height - appBarHeight - mediaQuery.padding.top),
       width: mediaQuery.size.width,
@@ -26,11 +27,13 @@ class EmptyScreen extends StatelessWidget {
             height: 20.0,
           ),
           Text(
-            Helper.isToday(date) ? 'Start your today schedule...' : 'Plan your future schedule...',
+            Helper.isToday(date)
+                ? 'Start your today schedule...'
+                : 'Plan your future schedule...',
             style: TextStyle(
               fontFamily: 'OpenSans',
               fontWeight: FontWeight.w600,
-              color: Colors.black,
+              color: Colors.black87,
               fontSize: 16,
             ),
           ),

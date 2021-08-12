@@ -6,7 +6,6 @@ import '../models/http_exception.dart';
 import '../providers/task.dart';
 import '../providers/schedule_provider.dart';
 import '../widgets/effort_rating_alert_dialog.dart';
-import '../widgets/task_overview.dart';
 
 class ScheduleItem extends StatelessWidget {
   final BuildContext ancestorContext;
@@ -118,7 +117,7 @@ class ScheduleItem extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-            trailing: Transform.scale(
+            trailing: Helper.isToday(task.date) ? Transform.scale(
               scale: 1.1,
               child: Consumer<Task>(
                 builder: (ctx, taskItem, _) => Checkbox(
@@ -146,12 +145,12 @@ class ScheduleItem extends StatelessWidget {
                   checkColor: Colors.white,
                   fillColor: MaterialStateProperty.resolveWith(
                     (_) {
-                      return Colors.black87;
+                      return Theme.of(context).accentColor;
                     },
                   ),
                 ),
               ),
-            ),
+            ) : const SizedBox(),
           ),
         ),
       ),

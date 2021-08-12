@@ -14,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
   String? _refreshToken;
   DateTime? _expiryDate;
   String? _userId;
+  String? _email;
   Timer? _authTimer;
 
   bool get isAuth {
@@ -31,6 +32,10 @@ class AuthProvider extends ChangeNotifier {
 
   String? get userId {
     return _userId;
+  }
+
+  String? get userEmail {
+    return _email;
   }
 
   Future<void> _authenticate(
@@ -55,6 +60,7 @@ class AuthProvider extends ChangeNotifier {
       _token = responseData['idToken'];
       _refreshToken = responseData['refreshToken'];
       _userId = responseData['localId'];
+      _email = responseData['email'];
       _expiryDate = DateTime.now().add(
         Duration(
           seconds: int.parse(responseData['expiresIn']),
@@ -68,6 +74,7 @@ class AuthProvider extends ChangeNotifier {
         'token': _token,
         'refreshToken': _refreshToken,
         'userId': _userId,
+        'email': _email,
         'expiryDate': _expiryDate!.toIso8601String(),
       });
       prefs.setString('userData', userData);
@@ -117,6 +124,7 @@ class AuthProvider extends ChangeNotifier {
         'token': _token,
         'refreshToken': _refreshToken,
         'userId': _userId,
+        'email': _email,
         'expiryDate': _expiryDate!.toIso8601String(),
       });
       prefs.setString('userData', userData);
@@ -142,6 +150,7 @@ class AuthProvider extends ChangeNotifier {
     final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
     _token = extractedUserData['token'];
     _refreshToken = extractedUserData['refreshToken'];
+    _email = extractedUserData['email'];
     _userId = userId;
     _expiryDate = expiryDate;
 
@@ -161,6 +170,7 @@ class AuthProvider extends ChangeNotifier {
     _userId = null;
     _expiryDate = null;
     _refreshToken = null;
+    _email = null;
     if (_authTimer != null) {
       _authTimer!.cancel();
       _authTimer = null;

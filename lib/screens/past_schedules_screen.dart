@@ -103,7 +103,6 @@ class _PastSchedulesScreenState extends State<PastSchedulesScreen> {
                     }
                   },
                 ),
-                drawer: AppDrawer(),
               )
             : NoConnectionScreen();
       }

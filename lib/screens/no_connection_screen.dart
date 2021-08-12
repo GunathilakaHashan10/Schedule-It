@@ -6,25 +6,6 @@ import 'package:flutter/services.dart';
 class NoConnectionScreen extends StatelessWidget {
   const NoConnectionScreen({Key? key}) : super(key: key);
 
-  Widget _getControlButton(
-      {required MediaQueryData mediaQuery, required String label, required VoidCallback onPressed}) {
-    return Material(
-      elevation: 1.0,
-      borderRadius: BorderRadius.circular(30.0),
-      clipBehavior: Clip.antiAlias,
-      color: Colors.white60,
-      child: MaterialButton(
-        minWidth: mediaQuery.size.width * 0.1,
-        padding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-        child: Text(
-          label,
-          style: TextStyle(color: Colors.black54, fontSize: 12.0),
-        ),
-        onPressed: onPressed,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -78,27 +59,30 @@ class NoConnectionScreen extends StatelessWidget {
                   Container(
                     width: mediaQuery.size.width * 0.7,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Expanded(
-                          child: _getControlButton(
-                            mediaQuery: mediaQuery,
-                            label: 'RETRY',
-                            onPressed: () {
-                              Navigator.of(context).pushReplacementNamed('/');
-                            }
+                          child: Material(
+                            elevation: 1.0,
+                            borderRadius: BorderRadius.circular(30.0),
+                            clipBehavior: Clip.antiAlias,
+                            color: Colors.white60,
+                            child: MaterialButton(
+                              minWidth: mediaQuery.size.width * 0.1,
+                              padding: const EdgeInsets.fromLTRB(
+                                  20.0, 15.0, 20.0, 15.0),
+                              child: Text(
+                                'EXIT',
+                                style: TextStyle(
+                                    color: Theme.of(context).accentColor,
+                                    fontSize: 16.0),
+                              ),
+                              onPressed: () {
+                                SystemNavigator.pop();
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10.0),
-                        Expanded(
-                          child: _getControlButton(
-                            mediaQuery: mediaQuery,
-                            label: 'EXIT',
-                            onPressed: () {
-                              SystemNavigator.pop();
-                            }
-                          ),
-                        ),
+                        )
                       ],
                     ),
                   )
